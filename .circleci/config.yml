@@ -2,21 +2,24 @@ version: 2.1
 jobs:
   build-android:
     docker:
-      - image: cimg/android:2024.01 # سيرفر مجهز بأدوات الأندرويد
+      - image: cimg/android:2024.01
     steps:
       - checkout
       - run:
-          name: Install Dependencies
+          name: Install Dependencies & Accept Licenses
           command: |
             sudo apt-get update
             sudo apt-get install -y python3-pip build-essential git ffmpeg libsdl2-dev libsdl2-image-dev libsdl2-mixer-dev libsdl2-ttf-dev libportmidi-dev libswscale-dev libavformat-dev libavcodec-dev zlib1g-dev
-            pip3 install --user --upgrade buildozer kivy
+            pip3 install --user --upgrade buildozer kivy psutil
+            # الموافقة على رخص الأندرويد تلقائياً لمنع توقف البناء
+            yes | sdkmanager --licenses || true
       - run:
           name: Build APK with Buildozer
           command: |
-            # إذا كان لديك ملف buildozer.spec جاهز سيتم استخدامه، وإلا سيتم إنشاؤه
             if [ ! -f buildozer.spec ]; then
               buildozer init
+              # تعديل الإعدادات الأساسية لضمان عمل الحزم
+              sed -i 's/# android.accept_sdk_license = False/android.accept_sdk_license = True/' buildozer.spec
             fi
             buildozer android debug
       - store_artifacts:
@@ -26,4 +29,3 @@ workflows:
   build:
     jobs:
       - build-android
-      
