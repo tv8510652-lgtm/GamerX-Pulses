@@ -2,30 +2,20 @@ version: 2.1
 jobs:
   build-android:
     docker:
-      - image: cimg/android:2024.01
+      - image: ghcr.io/kivy/buildozer:master
     steps:
       - checkout
       - run:
-          name: Install Dependencies, Cython & Accept Licenses
+          name: Build APK directly
           command: |
-            sudo apt-get update
-            sudo apt-get install -y python3-pip build-essential git ffmpeg libsdl2-dev libsdl2-image-dev libsdl2-mixer-dev libsdl2-ttf-dev libportmidi-dev libswscale-dev libavformat-dev libavcodec-dev zlib1g-dev
-            # تثبيت بيثون والمكتبات مع تحديد نسخة سايثون المتوافقة
-            pip3 install --user --upgrade "cython<3.0" buildozer kivy psutil
-            
-            mkdir -p ~/.android
-            touch ~/.android/repositories.cfg
-            yes | sdkmanager --licenses || true
-      - run:
-          name: Build APK with Buildozer
-          command: |
+            # إنشاء ملف الإعدادات إذا لم يكن موجوداً
             if [ ! -f buildozer.spec ]; then
               buildozer init
-              # إضافة psutil إلى المتطلبات داخل ملف الإعدادات تلقائياً
               sed -i 's/requirements = python3, kivy/requirements = python3, kivy, psutil/' buildozer.spec
               sed -i 's/# android.accept_sdk_license = False/android.accept_sdk_license = True/' buildozer.spec
             fi
-            yes | buildozer android debug
+            # البدء بالتجميع مباشرة باستخدام البيئة الرسمية الجاهزة
+            buildozer android debug
       - store_artifacts:
           path: bin/
           destination: apk-files
