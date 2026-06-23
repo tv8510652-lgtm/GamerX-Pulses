@@ -9,12 +9,18 @@ jobs:
           name: Build APK
           command: |
             if [ ! -f buildozer.spec ]; then
+              # هنا نخبر الأداة بشكل صريح بالتخطي أثناء إنشاء الملف
+              export FORCE_BUILDOZER_ALLOW_ROOT=1
               buildozer init
               sed -i 's/requirements = python3, kivy/requirements = python3, kivy, psutil/' buildozer.spec
               sed -i 's/# android.accept_sdk_license = False/android.accept_sdk_license = True/' buildozer.spec
             fi
-            # تشغيل البناء في وضع التخطي الأمني للسيرفرات
-            buildozer android debug || yes | buildozer android debug
+            # تفعيل المتغير قبل أمر البناء الفعلي لمنع التحذير تماماً
+            export FORCE_BUILDOZER_ALLOW_ROOT=1
+            buildozer android debug
+      - store_artifacts:
+          path: bin/
+          destination: apk-files
 workflows:
   build:
     jobs:
