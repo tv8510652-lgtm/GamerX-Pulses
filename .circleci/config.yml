@@ -1,0 +1,29 @@
+version: 2.1
+jobs:
+  build-android:
+    docker:
+      - image: cimg/android:2024.01 # سيرفر مجهز بأدوات الأندرويد
+    steps:
+      - checkout
+      - run:
+          name: Install Dependencies
+          command: |
+            sudo apt-get update
+            sudo apt-get install -y python3-pip build-essential git ffmpeg libsdl2-dev libsdl2-image-dev libsdl2-mixer-dev libsdl2-ttf-dev libportmidi-dev libswscale-dev libavformat-dev libavcodec-dev zlib1g-dev
+            pip3 install --user --upgrade buildozer kivy
+      - run:
+          name: Build APK with Buildozer
+          command: |
+            # إذا كان لديك ملف buildozer.spec جاهز سيتم استخدامه، وإلا سيتم إنشاؤه
+            if [ ! -f buildozer.spec ]; then
+              buildozer init
+            fi
+            buildozer android debug
+      - store_artifacts:
+          path: bin/
+          destination: apk-files
+workflows:
+  build:
+    jobs:
+      - build-android
+      
