@@ -8,17 +8,13 @@ jobs:
       - run:
           name: Build APK
           command: |
-            # تهيئة الملفات وتثبيت psutil داخل البيئة الرسمية
             if [ ! -f buildozer.spec ]; then
               buildozer init
               sed -i 's/requirements = python3, kivy/requirements = python3, kivy, psutil/' buildozer.spec
               sed -i 's/# android.accept_sdk_license = False/android.accept_sdk_license = True/' buildozer.spec
             fi
-            # البدء بالتجميع
-            buildozer android debug
-      - store_artifacts:
-          path: bin/
-          destination: apk-files
+            # تشغيل البناء في وضع التخطي الأمني للسيرفرات
+            buildozer android debug || yes | buildozer android debug
 workflows:
   build:
     jobs:
