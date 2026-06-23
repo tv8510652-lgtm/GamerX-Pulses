@@ -6,25 +6,25 @@ jobs:
     steps:
       - checkout
       - run:
-          name: Install Dependencies & Force Accept All Licenses
+          name: Install Dependencies, Cython & Accept Licenses
           command: |
             sudo apt-get update
             sudo apt-get install -y python3-pip build-essential git ffmpeg libsdl2-dev libsdl2-image-dev libsdl2-mixer-dev libsdl2-ttf-dev libportmidi-dev libswscale-dev libavformat-dev libavcodec-dev zlib1g-dev
-            pip3 install --user --upgrade buildozer kivy psutil
+            # تثبيت بيثون والمكتبات مع تحديد نسخة سايثون المتوافقة
+            pip3 install --user --upgrade "cython<3.0" buildozer kivy psutil
             
-            # تحديث مستودع الرخص والموافقة على كل شيء بلا استثناء
             mkdir -p ~/.android
             touch ~/.android/repositories.cfg
             yes | sdkmanager --licenses || true
-            yes | sdkmanager "build-tools;37.0.0" "platform-tools" "platforms;android-34" || true
       - run:
           name: Build APK with Buildozer
           command: |
             if [ ! -f buildozer.spec ]; then
               buildozer init
+              # إضافة psutil إلى المتطلبات داخل ملف الإعدادات تلقائياً
+              sed -i 's/requirements = python3, kivy/requirements = python3, kivy, psutil/' buildozer.spec
               sed -i 's/# android.accept_sdk_license = False/android.accept_sdk_license = True/' buildozer.spec
             fi
-            # تشغيل البناء مع قبول الرخص تلقائياً داخل الأدوات
             yes | buildozer android debug
       - store_artifacts:
           path: bin/
