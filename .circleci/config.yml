@@ -6,22 +6,26 @@ jobs:
     steps:
       - checkout
       - run:
-          name: Install Dependencies & Accept Licenses
+          name: Install Dependencies & Force Accept All Licenses
           command: |
             sudo apt-get update
             sudo apt-get install -y python3-pip build-essential git ffmpeg libsdl2-dev libsdl2-image-dev libsdl2-mixer-dev libsdl2-ttf-dev libportmidi-dev libswscale-dev libavformat-dev libavcodec-dev zlib1g-dev
             pip3 install --user --upgrade buildozer kivy psutil
-            # الموافقة على رخص الأندرويد تلقائياً لمنع توقف البناء
+            
+            # تحديث مستودع الرخص والموافقة على كل شيء بلا استثناء
+            mkdir -p ~/.android
+            touch ~/.android/repositories.cfg
             yes | sdkmanager --licenses || true
+            yes | sdkmanager "build-tools;37.0.0" "platform-tools" "platforms;android-34" || true
       - run:
           name: Build APK with Buildozer
           command: |
             if [ ! -f buildozer.spec ]; then
               buildozer init
-              # تعديل الإعدادات الأساسية لضمان عمل الحزم
               sed -i 's/# android.accept_sdk_license = False/android.accept_sdk_license = True/' buildozer.spec
             fi
-            buildozer android debug
+            # تشغيل البناء مع قبول الرخص تلقائياً داخل الأدوات
+            yes | buildozer android debug
       - store_artifacts:
           path: bin/
           destination: apk-files
@@ -29,3 +33,4 @@ workflows:
   build:
     jobs:
       - build-android
+      
