@@ -2,19 +2,19 @@ version: 2.1
 jobs:
   build-android:
     docker:
-      - image: ghcr.io/kivy/buildozer:master
+      - image: kivy/buildozer:latest
     steps:
       - checkout
       - run:
-          name: Build APK directly
+          name: Build APK
           command: |
-            # إنشاء ملف الإعدادات إذا لم يكن موجوداً
+            # تهيئة الملفات وتثبيت psutil داخل البيئة الرسمية
             if [ ! -f buildozer.spec ]; then
               buildozer init
               sed -i 's/requirements = python3, kivy/requirements = python3, kivy, psutil/' buildozer.spec
               sed -i 's/# android.accept_sdk_license = False/android.accept_sdk_license = True/' buildozer.spec
             fi
-            # البدء بالتجميع مباشرة باستخدام البيئة الرسمية الجاهزة
+            # البدء بالتجميع
             buildozer android debug
       - store_artifacts:
           path: bin/
